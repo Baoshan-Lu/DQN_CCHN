@@ -78,7 +78,7 @@ class DQN(object):
     def learn(self):
         # target net 参数更新 Q现实
         if self.learn_step_counter % TARGET_REPLACE_ITER == 0:
-            self.target_net.load_state_dict(self.eval_net.state_dict())
+            self.target_net.load_state_dict(self.eval_net.state_dict()) #复制参数
         self.learn_step_counter += 1
 
         # print('self.learn_step_counter=',self.learn_step_counter)

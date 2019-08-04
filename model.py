@@ -43,7 +43,6 @@ class DQN(object):
 
         self.count = 0
 
-
         self.eval_net, self.target_net = Net(parameters), Net(parameters)
 
         if self.gpu_type == True:
@@ -118,7 +117,6 @@ class DQN(object):
         q_next = self.target_net(b_s_).detach()  # 输入对应新的状态获得真实回报。detach from graph, don't backpropagate 不进行反向传播
         self.count=self.count+1
 
-
         q_target = b_r + self.gamma * q_next.max(1)[0].view(self.batchsize, 1)   # shape (batch, 1)
 
         # print(self.count,'\nq_next.max(1)=', q_next,q_next.max(1),'\nq_next.max(1)[0]=',q_next.max(1)[0])
@@ -127,3 +125,5 @@ class DQN(object):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
+        return  loss.cpu().detach().numpy()
