@@ -6,12 +6,14 @@ import numpy as np
 class Net(nn.Module):
     def __init__(self,parameters ):
         super(Net, self).__init__()
+        self.state = parameters.CR_router_number
+        self.action = parameters.power_set_number
 
-        self.states=parameters.states
-        self.actions = parameters.actions
+        # self.states=parameters.states
+        # self.actions = parameters.actions
 
 
-        self.hidden1 = nn.Linear(self.states, 256)   # 4,50
+        self.hidden1 = nn.Linear(self.state, 256)   # 4,50
         # self.hidden1.weight.data.normal_(0, 0.1)   # initialization
 
         self.hidden2 = nn.Linear(256, 256)   # 4,50
@@ -20,7 +22,7 @@ class Net(nn.Module):
         self.hidden3 = nn.Linear(256, 512)   # 4,50
         # self.hidden3.weight.data.normal_(0, 0.1)   # initialization
 
-        self.out = nn.Linear(512, self.actions)  # 50,2
+        self.out = nn.Linear(512, self.action)  # 50,2
         # self.out.weight.data.normal_(0, 0.1)   # initialization
 
     def forward(self, x):
@@ -31,7 +33,7 @@ class Net(nn.Module):
         x = F.relu(x)
 
         x = self.hidden3(x)
-        x = F.tanh(x)
+        x = torch.tanh(x)
 
         actions_value = self.out(x)
         return actions_value
@@ -45,8 +47,9 @@ class DQN(object):
         self.ENV_A_SHAPE = parameters.ENV_A_SHAPE
         self.targetnet_update_rate = parameters.targetnet_update_rate
         self.memory_capacity = parameters.memory_capacity
-        self.states = parameters.states
-        self.action = parameters.actions
+        self.states = parameters.CR_router_number
+        self.action = parameters.power_set_number
+
         self.learning_rate = parameters.learning_rate
         self.batchsize = parameters.batchsize
         self.gamma = parameters.gamma

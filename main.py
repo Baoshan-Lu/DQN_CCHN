@@ -15,21 +15,21 @@ env = env.unwrapped
 
 if __name__ == '__main__':
     # np.random.seed(20)  #2,8
-    torch.manual_seed(1)
+    # torch.manual_seed(1)
 
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     ENV_A_SHAPE = 0 if isinstance(env.action_space.sample(),
                                   int) else env.action_space.sample().shape  # to confirm the shape
     '''DQN_model'''
     parameters = argparse.ArgumentParser()
-    parameters.add_argument('--states', type=int, default=10)
-    parameters.add_argument('--actions', type=int, default=8)
+    # parameters.add_argument('--states', type=int, default=10)
+    # parameters.add_argument('--actions', type=int, default=8)
 
     parameters.add_argument('--epsion', type=int, default=0.8, help="epsion")
     parameters.add_argument('--ENV_A_SHAPE', type=int, default=ENV_A_SHAPE, help="ENV_A_SHAPE")
     parameters.add_argument('--targetnet_update_rate', type=int, default=100, help="targetnet_update_rate")
     parameters.add_argument('--memory_capacity', type=int, default=2000, help="memory_capacity")
-    parameters.add_argument('--batchsize', type=int, default=32)
+    parameters.add_argument('--batchsize', type=int, default=256)
     parameters.add_argument('--learning_rate', type=float, default=2 * 1e-3)
     parameters.add_argument('--gamma', type=float, default=0.9)
     parameters.add_argument('--epoch', type=int, default=100)
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 
     parameters.add_argument('--primary_init_power', type=float, default=0.1)
 
-    parameters = parameters.parse_args(['--epoch','5000'])
+    parameters = parameters.parse_args(['--epoch','20000'])
 
     cchn=network_model.Network(parameters)
     cchn.create_network()
