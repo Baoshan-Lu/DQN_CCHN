@@ -34,6 +34,7 @@ if __name__ == '__main__':
     parameters.add_argument('--gamma', type=float, default=0.9)
     parameters.add_argument('--epoch', type=int, default=100)
     parameters.add_argument('--gpu_type', type=bool, default=False, choices=[True, False])
+    parameters.add_argument('--pretrain', type=bool, default=True, choices=[True, False])
     parameters.add_argument('--save_path', type=str, default='results/')
 
     '''CCHN_network'''
@@ -55,7 +56,7 @@ if __name__ == '__main__':
 
     parameters.add_argument('--primary_init_power', type=float, default=0.1)
 
-    parameters = parameters.parse_args(['--epoch','2000'])
+    parameters = parameters.parse_args(['--epoch','20000'])
 
     # cchn=network_model.Network(parameters)
     # cchn.create_network()

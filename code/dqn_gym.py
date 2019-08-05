@@ -112,17 +112,19 @@ class DQN(object):
 
         q_target = b_r + GAMMA * q_next.max(1)[0].view(BATCH_SIZE, 1)   # shape (batch, 1)
 
-        print(self.count,'\nq_eval=', q_eval.view(1, BATCH_SIZE),'\nq_next=',q_next,'\nq_target=',q_target.view(1, BATCH_SIZE))
+        # print(self.count,'\nq_eval=', q_eval.view(1, BATCH_SIZE),'\nq_next=',q_next,'\nq_target=',q_target.view(1, BATCH_SIZE))
         loss = self.loss_func(q_eval, q_target)
 
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
 
+        return loss.cpu().detach().numpy()
+
 dqn = DQN()
 
 print('\nCollecting experience...')
-for i_episode in range(400):
+for i_episode in range(1000):
 
     '''初始化一个状态'''
     s = env.reset()
@@ -160,10 +162,9 @@ for i_episode in range(400):
 
         '''经验收集完毕，从经验库中抽取minbatch 来训练'''
         if dqn.memory_counter > MEMORY_CAPACITY:  #收集经验之后，开始学习
-            dqn.learn()
+            loss=dqn.learn()
             if done: #表示达到最佳状态
-                print('Ep: ', i_episode,
-                      '| Ep_r: ', round(ep_r, 2))
+                print('Ep: ', i_episode, '| Ep_r: ', round(ep_r, 2),'| loss: %.8f'%loss)
 
         '''不管经验库收不收集完成，如果已经完成任务，那就跳出，直接进入下一个状态'''
         if done:

@@ -23,6 +23,7 @@ class Model_train(object):
 
        self.cchn=Network(parameters)
        self.parameters=parameters
+       self.pretrain=parameters.pretrain
 
        self.save_path=parameters.save_path
        self.learning_rate = parameters.learning_rate
@@ -45,8 +46,11 @@ class Model_train(object):
 
         dqn = DQN(self.parameters)
 
+        if self.pretrain==True:
+            dqn=torch.load(self.save_path +'dqn_model')
+
         print('\nStarting training...')
-        print('gpu_type=',self.gpu_type,' memory_capacity=',self.memory_capacity,
+        print('pretrain=',self.pretrain,'gpu_type=',self.gpu_type,' memory_capacity=',self.memory_capacity,
                   ' learning_rate=',self.learning_rate,
                   ' epoch=',self.epoch,' CR-routes=',self.CR_router_number,
                   ' power_set_number=',self.power_set_number)
@@ -106,7 +110,7 @@ class Model_train(object):
                     loss=dqn.learn()
                     if done: #表示达到最佳状态
                         if epoch%100==0:
-                            print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),'Epoch: ', epoch,'| Reward: %.2f'%Reward,'| Loss: %.2f'%loss)
+                            print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),'Epoch: ', epoch,'| Reward: %.2f'%Reward,'| Loss: %.8f'%loss)
 
                 '''不管经验库收不收集完成，如果已经完成任务，那就跳出，直接进入下一个状态'''
                 if done:
@@ -153,7 +157,8 @@ class Model_train(object):
         PU_power, SU_power = self.cchn.reset_action()
         s = self.cchn.CR_router_sensed_power(PU_power, SU_power)
         s = torch.unsqueeze(torch.FloatTensor(s), 0)
-
+        if self.gpu_type==True:
+            s=s.cuda()
         print('PU_power_init:', PU_power, 'SU_power_init', SU_power)
 
         for epoch in range(2900):
