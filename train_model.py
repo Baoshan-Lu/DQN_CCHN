@@ -31,7 +31,12 @@ def model_trainning(parameters):
 
     dqn = DQN(parameters)
 
-    print('\nCollecting experience...')
+    print('\nStarting training...')
+    print('gpu_type=',parameters.gpu_type,' memory_capacity=',parameters.memory_capacity,
+              ' learning_rate=',parameters.learning_rate,
+              ' epoch=',parameters.epoch,' CR-routes=',parameters.CR_router_number,
+              ' power_set_number=',parameters.power_set_number)
+
 
     t0 = time.time()
     metrics = {'time': [], 'epoch': [], 'loss': [], 'reward': []}
