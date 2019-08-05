@@ -30,7 +30,7 @@ if __name__ == '__main__':
     parameters.add_argument('--targetnet_update_rate', type=int, default=100, help="targetnet_update_rate")
     parameters.add_argument('--memory_capacity', type=int, default=2000, help="memory_capacity")
     parameters.add_argument('--batchsize', type=int, default=32)
-    parameters.add_argument('--learning_rate', type=float, default=2 * 1e-4)
+    parameters.add_argument('--learning_rate', type=float, default=2 * 1e-3)
     parameters.add_argument('--gamma', type=float, default=0.9)
     parameters.add_argument('--epoch', type=int, default=100)
     parameters.add_argument('--gpu_type', type=bool, default=False, choices=[True, False])
@@ -45,6 +45,7 @@ if __name__ == '__main__':
     parameters.add_argument('--user_power_max', type=float, default=0.4)
     parameters.add_argument('--user_power_min', type=float, default=0.05)
     parameters.add_argument('--power_set_number', type=int, default=8)
+
     parameters.add_argument('--noise_power', type=float, default=0.01)
     parameters.add_argument('--mu', type=float, default=0.0)
     parameters.add_argument('--sigma', type=float, default=0.0005)

@@ -30,8 +30,6 @@ def model_trainning(parameters):
         pass
 
     dqn = DQN(parameters)
-    if parameters.gpu_type==True:
-        dqn=dqn.cuda()
 
     print('\nCollecting experience...')
 
@@ -56,7 +54,7 @@ def model_trainning(parameters):
             # env.render()
 
             '''将初始状态输入eval_net，结合利用e_greedy得到下一个动作'''
-            a = dqn.choose_action(s)
+            a = dqn.choose_action(s,epoch/parameters.epoch)
 
             # take action 采用一个动作
             '''采取此动作，计算回报，得到下一个状态'''

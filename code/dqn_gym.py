@@ -112,7 +112,7 @@ class DQN(object):
 
         q_target = b_r + GAMMA * q_next.max(1)[0].view(BATCH_SIZE, 1)   # shape (batch, 1)
 
-        # print(self.count,'\nq_next.max(1)=', q_next,q_next.max(1),'\nq_next.max(1)[0]=',q_next.max(1)[0])
+        print(self.count,'\nq_eval=', q_eval.view(1, BATCH_SIZE),'\nq_next=',q_next,'\nq_target=',q_target.view(1, BATCH_SIZE))
         loss = self.loss_func(q_eval, q_target)
 
         self.optimizer.zero_grad()

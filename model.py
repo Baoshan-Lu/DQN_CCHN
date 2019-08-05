@@ -66,13 +66,13 @@ class DQN(object):
         self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=self.learning_rate) #优化器选择
         self.loss_func = nn.MSELoss()
 
-    def choose_action(self, x):
+    def choose_action(self, x,k):
         x = torch.unsqueeze(torch.FloatTensor(x), 0)
         if self.gpu_type == True:
             x=x.cuda()
 
         # 这里只输入一个 sample
-        if np.random.uniform() < self.epsion:   # 选最优动作
+        if np.random.uniform() < self.epsion*(1-k):   # 选最优动作
             actions_value = self.eval_net.forward(x)
             # print('actions_value=',actions_value)
             # print('torch.max(actions_value, 1)=', torch.max(actions_value, 1))
@@ -134,9 +134,12 @@ class DQN(object):
         q_next = self.target_net(b_s_).detach()  # 输入对应新的状态获得真实回报。detach from graph, don't backpropagate 不进行反向传播
         self.count=self.count+1
 
-        q_target = b_r + self.gamma * q_next.max(1)[0].view(self.batchsize, 1)   # shape (batch, 1)
+        q_target = b_r + self.gamma * q_next.max(1)[0].view(self.batchsize, 1)   # shape (batch, 1)'\nq_next=',q_next,
+
+        # print(self.count,'\nq_eval=', q_eval.view(1, self.batchsize),'\nq_target=',q_target.view(1, self.batchsize))
 
         # print(self.count,'\nq_next.max(1)=', q_next,q_next.max(1),'\nq_next.max(1)[0]=',q_next.max(1)[0])
+
         loss = self.loss_func(q_eval, q_target)
 
         self.optimizer.zero_grad()
