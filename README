@@ -1,0 +1,19 @@
+This is simulation code for cognitive capacity harvested network (CCHN) .
+
+In the network, there is one PU, one SU, and a set of CR-routers.
+The goal is SU need to learn the power control model of PU with the help of CR-routers.
+Finally, SU can make the perfect power-decision with the trained DQN algorithm,
+while meeting the specific QoS of PU and SU.
+
+The DQN network model:
+
+    input layer: 10 (states: the sensed power in  CR-routes)
+    hidden layer 1: 256
+    relu()
+    hidden layer 2: 256
+    relu()
+    hidden layer 3: 512
+    tanh()
+    output layer: 8 (actions: the power mode for SU)
+
+
