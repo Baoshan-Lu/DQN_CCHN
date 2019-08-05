@@ -6,7 +6,7 @@ from  model  import DQN
 import argparse
 import time
 
-import train_model
+from train_model import  Model_train
 import network_model
 
 env = gym.make('CartPole-v0')
@@ -55,13 +55,15 @@ if __name__ == '__main__':
 
     parameters.add_argument('--primary_init_power', type=float, default=0.1)
 
-    parameters = parameters.parse_args(['--epoch','20000'])
+    parameters = parameters.parse_args(['--epoch','2000'])
 
-    cchn=network_model.Network(parameters)
-    cchn.create_network()
-    cchn.plot_network()
+    # cchn=network_model.Network(parameters)
+    # cchn.create_network()
+    # cchn.plot_network()
 
-    train_model.model_trainning(parameters)
+    Model_train=Model_train(parameters)
+    Model_train.model_trainning()
+    Model_train.secondary_power()
 
 
 
