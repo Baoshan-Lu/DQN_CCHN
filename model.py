@@ -11,14 +11,28 @@ class Net(nn.Module):
         self.actions = parameters.actions
 
 
-        self.fc1 = nn.Linear(self.states, 50)   # 4,50
-        self.fc1.weight.data.normal_(0, 0.1)   # initialization
-        self.out = nn.Linear(50, self.actions)  # 50,2
-        self.out.weight.data.normal_(0, 0.1)   # initialization
+        self.hidden1 = nn.Linear(self.states, 256)   # 4,50
+        # self.hidden1.weight.data.normal_(0, 0.1)   # initialization
+
+        self.hidden2 = nn.Linear(256, 256)   # 4,50
+        # self.hidden2.weight.data.normal_(0, 0.1)   # initialization
+
+        self.hidden3 = nn.Linear(256, 512)   # 4,50
+        # self.hidden3.weight.data.normal_(0, 0.1)   # initialization
+
+        self.out = nn.Linear(512, self.actions)  # 50,2
+        # self.out.weight.data.normal_(0, 0.1)   # initialization
 
     def forward(self, x):
-        x = self.fc1(x)
+        x = self.hidden1(x)
         x = F.relu(x)
+
+        x = self.hidden2(x)
+        x = F.relu(x)
+
+        x = self.hidden3(x)
+        x = F.tanh(x)
+
         actions_value = self.out(x)
         return actions_value
 
@@ -60,7 +74,10 @@ class DQN(object):
         # 这里只输入一个 sample
         if np.random.uniform() < self.epsion:   # 选最优动作
             actions_value = self.eval_net.forward(x)
+            # print('actions_value=',actions_value)
+            # print('torch.max(actions_value, 1)=', torch.max(actions_value, 1))
             action = torch.max(actions_value, 1)[1].cpu().data.numpy()
+            # print('action=', action)
             action = action[0] if self.ENV_A_SHAPE == 0 else action.reshape(self.ENV_A_SHAPE)  # return the argmax index
         else:   # 选随机动作
             action = np.random.randint(0, self.action)

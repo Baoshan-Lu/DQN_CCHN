@@ -55,6 +55,8 @@ class DQN(object):
         # 这里只输入一个 sample
         if np.random.uniform() < EPSILON:   # 选最优动作
             actions_value = self.eval_net.forward(x)
+            # print('actions_value=',actions_value)
+            # print( torch.max(actions_value, 1))
             action = torch.max(actions_value, 1)[1].data.numpy()
             action = action[0] if ENV_A_SHAPE == 0 else action.reshape(ENV_A_SHAPE)  # return the argmax index
         else:   # 选随机动作
@@ -124,26 +126,36 @@ for i_episode in range(400):
 
     '''初始化一个状态'''
     s = env.reset()
+    # print('state:', s.shape)
     # print(len(s))
     ep_r = 0
     while True:
         # env.render()
         '''输入状态，利用搜索取得一个期望动作'''
+        # print('s:',s)
         a = dqn.choose_action(s)
+
+
 
         # take action 采用一个动作
         '''采取此动作，进入下一个状态'''
         s_, r, done, info = env.step(a)
+        # print('r:',r)
+
+
 
         '''获得回报'''
-        x, x_dot, theta, theta_dot = s_
-        r1 = (env.x_threshold - abs(x)) / env.x_threshold - 0.8
-        r2 = (env.theta_threshold_radians - abs(theta)) / env.theta_threshold_radians - 0.5
-        r = r1 + r2
+        # x, x_dot, theta, theta_dot = s_
+        # r1 = (env.x_threshold - abs(x)) / env.x_threshold - 0.8
+        # r2 = (env.theta_threshold_radians - abs(theta)) / env.theta_threshold_radians - 0.5
+        # r = r1 + r2
 
         '''收集经验'''
         dqn.store_transition(s, a, r, s_)
-
+        # print('s:',type(s))
+        # print('a:',type(a))
+        # print('r:', type(r))
+        # print('s_:', type(s_))
         ep_r += r
 
         '''经验收集完毕，从经验库中抽取minbatch 来训练'''
