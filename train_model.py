@@ -129,7 +129,7 @@ class Model_train(object):
 
         model=torch.load(self.save_path + 'eval_net')
 
-        print('\nStarting test...')
+        # print('\nStarting test...')
         # print('gpu_type=',self.gpu_type,' memory_capacity=',self.memory_capacity,
         #           ' learning_rate=',self.learning_rate,
         #           ' epoch=',self.epoch,' CR-routes=',self.CR_router_number,
@@ -145,7 +145,7 @@ class Model_train(object):
         print('PU_power_init:', PU_power, 'SU_power_init', SU_power)
 
         optimal=0
-        epoch_max=search_epoch
+        # epoch_max=search_epoch
         pu_power1, su_power1=PU_power, SU_power
 
         for epoch in range(search_epoch):
@@ -156,25 +156,34 @@ class Model_train(object):
 
             '''计算reward'''
             s_, r, done,pu_power,su_power = self.cchn.Model_based_power_control(action)
-            print('Epoch:',epoch,' action:',action,' reward:',r)#'s:',s,,'\ns_:',s_
+            # print('Epoch:',epoch,' action:',action,' reward:',r)#'s:',s,,'\ns_:',s_
+            print('Current_state: ', s)
+            print('Action: ', action)
+            print('Next_state: ',s_)
 
             '''达到最佳的状态，跳出'''
             if done:
                 # print('PU_power_optimal:', pu_power, 'SU_power_optimal:', su_power)
                 optimal=1
-                epoch_max=epoch
                 pu_power1, su_power1 =pu_power,su_power
                 break
-
-        return  optimal,epoch_max,pu_power1,su_power1
+        return  optimal,pu_power1,su_power1
 
 
     def accuracy(self,times):
-
+        count=0
         for search_epoch in range(times):
-            optimal, epoch_max,pu_power,su_power=self.secondary_power(search_epoch)
-            print('Optimal=', optimal, '|  Epoch_max=', epoch_max)
-            print('PU_power_optimal:', pu_power, 'SU_power_optimal:', su_power)
+            print('\nTest:',search_epoch)
+            optimal,pu_power,su_power=self.secondary_power(500)
+
+            if optimal==1:
+                print('Succeed access...')
+                print('Optimal solution: ',',| PU_power_optimal:', pu_power, ',| SU_power_optimal:', su_power)
+                count+=1
+            else:
+                print( 'Fail access...')
+
+        print('Successful access rate= %0.2f'% (count/times))
 
 
 

@@ -14,8 +14,7 @@ env = env.unwrapped
 
 
 if __name__ == '__main__':
-    np.random.seed(20)  #2,8
-    torch.manual_seed(1)
+
 
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     ENV_A_SHAPE = 0 if isinstance(env.action_space.sample(),
@@ -60,12 +59,18 @@ if __name__ == '__main__':
          '--reward', '100', '--epoch','2000',#'--gpu_type', '1', '--pretrain','0'
          ])
 
-    cchn=network_model.Network(parameters)
-    cchn.create_network()
-    cchn.plot_network()
+    '''随机种子'''
+    # np.random.seed(20)
+    # torch.manual_seed(1)
 
+    '''CCHN网络'''
+    cchn=network_model.Network(parameters)
+    # cchn.create_network()
+    # cchn.plot_network()
+
+    '''模型训练'''
     Model_train=Model_train(parameters)
-    Model_train.model_trainning()
+    # Model_train.model_trainning()
 
     # Model_train.secondary_power()
-    # Model_train.accuracy(100)
+    Model_train.accuracy(200)
