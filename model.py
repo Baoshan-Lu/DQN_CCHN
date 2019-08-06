@@ -14,16 +14,16 @@ class Net(nn.Module):
 
 
         self.hidden1 = nn.Linear(self.state, 256)   # 4,50
-        # self.hidden1.weight.data.normal_(0, 0.1)   # initialization
+        self.hidden1.weight.data.normal_(0, 0.1)   # initialization
 
         self.hidden2 = nn.Linear(256, 256)   # 4,50
-        # self.hidden2.weight.data.normal_(0, 0.1)   # initialization
+        self.hidden2.weight.data.normal_(0, 0.1)   # initialization
 
         self.hidden3 = nn.Linear(256, 512)   # 4,50
-        # self.hidden3.weight.data.normal_(0, 0.1)   # initialization
+        self.hidden3.weight.data.normal_(0, 0.1)   # initialization
 
         self.out = nn.Linear(512, self.action)  # 50,2
-        # self.out.weight.data.normal_(0, 0.1)   # initialization
+        self.out.weight.data.normal_(0, 0.1)   # initialization
 
     def forward(self, x):
         x = self.hidden1(x)
@@ -77,20 +77,27 @@ class DQN(object):
 
     def choose_action(self, x,k):
         x = torch.unsqueeze(torch.FloatTensor(x), 0)
+
         if self.gpu_type == True:
             x=x.cuda()
 
         # 这里只输入一个 sample
         if np.random.uniform() < self.epsion*(1-k):   # 选最优动作
             actions_value = self.eval_net.forward(x)
+
             # print('actions_value=',actions_value)
             # print('torch.max(actions_value, 1)=', torch.max(actions_value, 1))
             action = torch.max(actions_value, 1)[1].cpu().data.numpy()
             # print('action=', action)
-            action = action[0] if self.ENV_A_SHAPE == 0 else action.reshape(self.ENV_A_SHAPE)  # return the argmax index
+            # action = action[0] if self.ENV_A_SHAPE == 0 else action.reshape(self.ENV_A_SHAPE)  # return the argmax index
         else:   # 选随机动作
             action = np.random.randint(0, self.action)
-            action = action if self.ENV_A_SHAPE == 0 else action.reshape(self.ENV_A_SHAPE)
+            # action = action if self.ENV_A_SHAPE == 0 else action.reshape(self.ENV_A_SHAPE)
+
+        # print('x============:', x)
+        # # print('actions_value:', actions_value)
+        # print('chosen_action:', action)
+
         return action
 
     def store_transition(self, s, a, r, s_):

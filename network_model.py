@@ -168,8 +168,9 @@ class Network(object):
 
         '''计算下一次的 PU 功率'''
         SINR_pu_old = pu_power / (su_power + self.noise_power)
+
+        '''PU 功率控制策略1'''
         pu_new_power=(pu_power*self.primary_rate_min)/SINR_pu_old
-        #超过最大功率
         if pu_new_power<self.user_power_max:
             selected=int((pu_new_power/self.user_power_max)*self.power_set_number)
             # print('selected:',selected)
@@ -177,6 +178,12 @@ class Network(object):
 
         elif pu_new_power>self.user_power_max:
             pu_new_power=self.user_power_max
+
+        '''PU 功率控制策略2'''
+
+
+
+
 
         '''PU 功率更新'''
         self.primary_init_power=pu_new_power
@@ -227,7 +234,7 @@ class Network(object):
             reward=self.reward
 
 
-        return new_states,reward,done,pu_new_power,su_power
+        return new_states,reward,done,pu_new_power,su_power,SINR_pu,SINR_su
 
 
     def CR_router_sensed_power(self,pu_power,su_power,sigma_factor):
