@@ -89,7 +89,8 @@ class DQN(object):
             # print('torch.max(actions_value, 1)=', torch.max(actions_value, 1))
             action = torch.max(actions_value, 1)[1].cpu().data.numpy()
             # print('action=', action)
-            # action = action[0] if self.ENV_A_SHAPE == 0 else action.reshape(self.ENV_A_SHAPE)  # return the argmax index
+            action = action[0]
+            #if self.ENV_A_SHAPE == 0 else action.reshape(self.ENV_A_SHAPE)  # return the argmax index
         else:   # 选随机动作
             action = np.random.randint(0, self.action)
             # action = action if self.ENV_A_SHAPE == 0 else action.reshape(self.ENV_A_SHAPE)

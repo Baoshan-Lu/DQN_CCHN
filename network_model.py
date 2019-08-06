@@ -11,6 +11,7 @@ class Network(object):
         self.CR_router_number = parameters.CR_router_number
         self.reward=parameters.reward
         self.sigma_factor=parameters.sigma_factor
+        self.pu_power_mode=parameters.pu_power_mode
 
         self.user_power_max=parameters.user_power_max
         self.user_power_min=parameters.user_power_min
@@ -24,8 +25,7 @@ class Network(object):
         self.primary_init_power=parameters.primary_init_power
 
         self.network=np.load(self.save_path + 'network_model.npy',allow_pickle=True)
-        self.power_set=np.linspace(self.user_power_min,
-                              self.user_power_max,self.power_set_number)
+        self.power_set=np.round(np.linspace(self.user_power_min,self.user_power_max,self.power_set_number),2)
 
     def create_network(self):
         '''产生模型'''
@@ -157,36 +157,83 @@ class Network(object):
         # Gain=self.channelgain(pu_i,su_j)
         done=False
         reward=0
-
         pu_power = self.primary_init_power
+
+        pu_index=0
+        # print('power_set:',self.power_set)
+        # for t in range(self.power_set_number):
+        #     if round(self.power_set[t], 2) == round(pu_power,2):
+        #         pu_index=t
+        #         break
+        pu_index = np.argwhere(self.power_set == self.primary_init_power)[0][0]
+
 
         '''根据动作选择得到 SU 功率'''
         su_power = self.power_set[action_choose]
 
         '''根据动作得到状态'''
-        new_states=self.CR_router_sensed_power(self.primary_init_power,su_power,self.sigma_factor)
+        new_states=self.CR_router_sensed_power(
+            self.primary_init_power,su_power,self.sigma_factor)
 
         '''计算下一次的 PU 功率'''
         SINR_pu_old = pu_power / (su_power + self.noise_power)
 
+
         '''PU 功率控制策略1'''
-        pu_new_power=(pu_power*self.primary_rate_min)/SINR_pu_old
-        if pu_new_power<self.user_power_max:
-            selected=int((pu_new_power/self.user_power_max)*self.power_set_number)
-            # print('selected:',selected)
-            pu_new_power = self.power_set[selected]
+        if self.pu_power_mode==1:
+            pu_new_power=(pu_power*self.primary_rate_min)/SINR_pu_old
+            if pu_new_power<self.user_power_max:
+                selected=int((pu_new_power/self.user_power_max)*self.power_set_number)
+                # print('selected:',selected)
+                pu_new_power = self.power_set[selected]
+            elif pu_new_power>self.user_power_max:
+                pu_new_power=self.user_power_max
+        else:
+            '''PU 功率控制策略2'''
+            # print('pu_index:', pu_index)
+            # print('adopt_action 2:', action_choose)
+            #
+            # print('su_power:', su_power)
+            # print('pu_power_old:', pu_power)
+            # # print('PU_Index:',pu_index)
+            # #
+            # if pu_index>0:
+            #     print('Power[pu_index-1]:', self.power_set[pu_index-1])
+            #
+            #
+            #
+            # print('Power[pu_index]:', self.power_set[pu_index ])
+            #
+            # if pu_index+1<self.power_set_number:
+            #     print('Power[pu_index+1]:', self.power_set[pu_index+1])
 
-        elif pu_new_power>self.user_power_max:
-            pu_new_power=self.user_power_max
-
-        '''PU 功率控制策略2'''
+            t=(pu_power*self.primary_rate_min)/SINR_pu_old
 
 
+            t=np.round(t,2)
+            # print('t:', t)
+            # if pu_index==0 or pu_index==self.power_set_number-1:
+            if pu_index+1<self.power_set_number and (t>=pu_power \
+                    and t <= self.power_set[pu_index+1]) :
+                # print('1111111111111111111111111111111111111111111111111111111111111111111111111111111111')
+                pu_new_power=self.power_set[pu_index+1]
+                # print('pu_new_power:',pu_new_power)
+
+            elif pu_index-1>=0 and t<=self.power_set[pu_index-1]:
+                pu_new_power = self.power_set[pu_index - 1]
+                # print('22222222222222222222222222222222222222222222222222222222222222222222222222222222222222')
+            else:
+                pu_new_power=pu_power
+                # print('333333333333333333333333333333333333333333333333333333333333333333333333333333333333333')
+
+
+        # print('pu_new_power:', pu_new_power)
 
 
 
         '''PU 功率更新'''
         self.primary_init_power=pu_new_power
+
 
         '''PU回应之后，信干噪比检测，计算回报率'''
         SINR_pu = pu_new_power / (su_power + self.noise_power)
@@ -194,6 +241,9 @@ class Network(object):
         if SINR_pu>=self.primary_rate_min and SINR_su>=self.secodary_rate_min:
             done=True  #到达最好的状态
             reward=self.reward
+
+
+
 
         return new_states,reward,done#,SINR_pu,SINR_su
 
@@ -202,29 +252,83 @@ class Network(object):
         # Gain=self.channelgain(pu_i,su_j)
         done=False
         reward=0
-
         pu_power = self.primary_init_power
+
+        pu_index=0
+        # print('power_set:',self.power_set)
+        # for t in range(self.power_set_number):
+        #     if round(self.power_set[t], 2) == round(pu_power,2):
+        #         pu_index=t
+        #         break
+        pu_index = np.argwhere(self.power_set == self.primary_init_power)[0][0]
+
 
         '''根据动作选择得到 SU 功率'''
         su_power = self.power_set[action_choose]
 
         '''根据动作得到状态'''
-        new_states=self.CR_router_sensed_power(self.primary_init_power,su_power,self.sigma_factor)
+        new_states=self.CR_router_sensed_power(
+            self.primary_init_power,su_power,self.sigma_factor)
 
         '''计算下一次的 PU 功率'''
         SINR_pu_old = pu_power / (su_power + self.noise_power)
-        pu_new_power=(pu_power*self.primary_rate_min)/SINR_pu_old
-        #超过最大功率
-        if pu_new_power<self.user_power_max:
-            selected=int((pu_new_power/self.user_power_max)*self.power_set_number)
-            # print('selected:',selected)
-            pu_new_power = self.power_set[selected]
 
-        elif pu_new_power>self.user_power_max:
-            pu_new_power=self.user_power_max
+
+        '''PU 功率控制策略1'''
+        if self.pu_power_mode==1:
+            pu_new_power=(pu_power*self.primary_rate_min)/SINR_pu_old
+            if pu_new_power<self.user_power_max:
+                selected=int((pu_new_power/self.user_power_max)*self.power_set_number)
+                # print('selected:',selected)
+                pu_new_power = self.power_set[selected]
+            elif pu_new_power>self.user_power_max:
+                pu_new_power=self.user_power_max
+        else:
+            '''PU 功率控制策略2'''
+            # print('pu_index:', pu_index)
+            # print('adopt_action 2:', action_choose)
+            #
+            # print('su_power:', su_power)
+            # print('pu_power_old:', pu_power)
+            # # print('PU_Index:',pu_index)
+            # #
+            # if pu_index>0:
+            #     print('Power[pu_index-1]:', self.power_set[pu_index-1])
+            #
+            #
+            #
+            # print('Power[pu_index]:', self.power_set[pu_index ])
+            #
+            # if pu_index+1<self.power_set_number:
+            #     print('Power[pu_index+1]:', self.power_set[pu_index+1])
+
+            t=(pu_power*self.primary_rate_min)/SINR_pu_old
+
+
+            t=np.round(t,2)
+            # print('t:', t)
+            # if pu_index==0 or pu_index==self.power_set_number-1:
+            if pu_index+1<self.power_set_number and (t>=pu_power \
+                    and t <= self.power_set[pu_index+1]) :
+                # print('1111111111111111111111111111111111111111111111111111111111111111111111111111111111')
+                pu_new_power=self.power_set[pu_index+1]
+                # print('pu_new_power:',pu_new_power)
+
+            elif pu_index-1>=0 and t<=self.power_set[pu_index-1]:
+                pu_new_power = self.power_set[pu_index - 1]
+                # print('22222222222222222222222222222222222222222222222222222222222222222222222222222222222222')
+            else:
+                pu_new_power=pu_power
+                # print('333333333333333333333333333333333333333333333333333333333333333333333333333333333333333')
+
+
+        # print('pu_new_power:', pu_new_power)
+
+
 
         '''PU 功率更新'''
         self.primary_init_power=pu_new_power
+
 
         '''PU回应之后，信干噪比检测，计算回报率'''
         SINR_pu = pu_new_power / (su_power + self.noise_power)
@@ -232,6 +336,7 @@ class Network(object):
         if SINR_pu>=self.primary_rate_min and SINR_su>=self.secodary_rate_min:
             done=True  #到达最好的状态
             reward=self.reward
+
 
 
         return new_states,reward,done,pu_new_power,su_power,SINR_pu,SINR_su

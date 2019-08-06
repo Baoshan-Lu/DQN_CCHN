@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     '''DQN_model'''
     parameters = argparse.ArgumentParser()
-    parameters.add_argument('--epsion', type=int, default=0.6, help="epsion")
+    parameters.add_argument('--epsion', type=int, default=0.7, help="epsion")
     parameters.add_argument('--targetnet_update_rate', type=int, default=100, help="targetnet_update_rate")
     parameters.add_argument('--memory_capacity', type=int, default=400, help="memory_capacity")
     parameters.add_argument('--batchsize', type=int, default=256)
@@ -40,33 +40,38 @@ if __name__ == '__main__':
     parameters.add_argument('--secodary_rate_min', type=float, default=0.7)
     parameters.add_argument('--primary_init_power', type=float, default=0.1)
     parameters.add_argument('--learning_rate', type=float, default=1 * 1e-3)
+    parameters.add_argument('--pu_power_mode', type=int, default=2)
+
 
     parameters.add_argument('--gpu_type', type=bool, default=False, choices=[True, False])
     parameters.add_argument('--pretrain', type=bool, default=False, choices=[True, False])
 
     '''初始参数'''
     parameters = parameters.parse_args(
-        ['--CR_router_number','2', '--power_set_number',
-         '20','--reward', '100','--batchsize','256',
+        ['--CR_router_number','3', '--power_set_number',
+         '8','--reward', '10','--batchsize','256',
          '--memory_capacity','400','--start_train', '300',
-         '--sigma_factor','10','--test_number', '1000',
-         '--primary_rate_min', '1.2', '--secodary_rate_min', '0.7',
-          '--epoch','1000000','--learning_rate','0.001'])
+         '--sigma_factor','20','--test_number', '50',
+         '--primary_rate_min', '1.1', '--secodary_rate_min', '0.7',
+          '--epoch','5000','--learning_rate','0.001'])
 
 
     '''随机种子'''
-    # np.random.seed(20)
-    # torch.manual_seed(1)
+    np.random.seed(20)
+    torch.manual_seed(1)
 
     '''CCHN网络'''
     cchn=network_model.Network(parameters)
     cchn.create_network()
     cchn.plot_network()
+    # for t in range(8):
+    new_states, reward, done=cchn.envirement(1)
 
 
-    '''模型训练'''
+
+    # '''模型训练'''
     Model_train=Model_train(parameters)
     Model_train.model_trainning()
 
     # Model_train.secondary_power()
-    # Model_train.accuracy(200)
+    Model_train.accuracy(200)

@@ -5,7 +5,7 @@ from  model  import DQN
 import argparse
 import time
 from datetime import datetime
-
+import matplotlib.pyplot as plt
 import json
 from json import encoder
 import sys
@@ -66,92 +66,104 @@ class Model_train(object):
         print('\nStarting training...')
 
         t0 = time.time()
-        metrics = {'time': [], 'epoch': [], 'loss': [], 'reward': []}
+        metrics = {'epoch': [], 'loss': [], 'success_rate': []}
 
         count=0
         loss = 100
 
         '''初始化，PU,SU随机选择一个动作，计算CR_router感知的功率，作为初始状态值'''
-        PU_power, SU_power = self.cchn.reset_action()
+        # PU_power, SU_power = self.cchn.reset_action()
         # print('Count:', count, 'PU_power:', PU_power, 'SU_power:', SU_power)
         for epoch in range(self.epoch):
 
-            # '''初始化，PU,SU随机选择一个动作，计算CR_router感知的功率，作为初始状态值'''
-            # PU_power,SU_power=self.cchn.reset_action()
-
+            '''初始化，PU,SU随机选择一个动作，计算CR_router感知的功率，作为初始状态值'''
+            PU_power,SU_power=self.cchn.reset_action()
+            # print('PU_power:', PU_power, 'SU_power:', SU_power)
             s=self.cchn.CR_router_sensed_power(PU_power,SU_power,self.sigma_factor)
+
             reward = 0
-            # while True:
+            while True:
 
-            '''将初始状态输入eval_net，结合利用e_greedy得到下一个动作'''
-            a = dqn.choose_action(s,epoch/self.epoch)
+                '''将初始状态输入eval_net，结合利用e_greedy得到下一个动作'''
+                a = dqn.choose_action(s,epoch/self.epoch)
 
-            '''采取此动作,Pu调整自己的功率，计算回报，得到下一个状态'''
-            s_, r, done=self.cchn.envirement(a)
+                '''采取此动作,Pu调整自己的功率，计算回报，得到下一个状态'''
+                # print('\nInput_state:', s)
+                # print('Choose action 1: ', a)
+                s_, r, done=self.cchn.envirement(a)
 
-            '''收集经验'''
-            dqn.store_transition(s, a, r, s_)
-            reward += r
 
-            '''经验收集完毕，从经验库中抽取minbatch 来训练'''
-            if dqn.memory_counter > self.start_train:  #收集经验之后，开始学习
-                loss=dqn.learn()
-                # if done: #表示达到最佳状态
-                #     if epoch%100==0:
-                #         print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),'Epoch: ', epoch,
-                #               '| Reward: %.2f'%reward,'| Loss: %.10f'%loss)
+                # print('Done: ', done)
+                # print('Next_state: ',s_)
 
-            '''完成任务，那就跳出，直接进入下一个状态'''
-            if done:
-                '''重新初始化'''
-                PU_power, SU_power = self.cchn.reset_action()
-                # print('Count:', count, 'PU_power:', PU_power, 'SU_power:', SU_power)
-            else:
+                '''收集经验'''
+                dqn.store_transition(s, a, r, s_)
+                reward += r
+
+                '''经验收集完毕，从经验库中抽取minbatch 来训练'''
+                if dqn.memory_counter > self.start_train:  #收集经验之后，开始学习
+                    loss=dqn.learn()
+                    # if done: #表示达到最佳状态
+                    #     if epoch%100==0:
+                    #         print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),'Epoch: ', epoch,
+                    #               '| Reward: %.2f'%reward,'| Loss: %.10f'%loss)
+                '''完成任务，那就跳出，直接进入下一个状态'''
+                if done:
+                    break
+                    # '''重新初始化'''
+                    # PU_power, SU_power = self.cchn.reset_action()
+
+                    # print('Count:', count, 'PU_power:', PU_power, 'SU_power:', SU_power)
+                # else:
                 s=s_
 
             count = count + 1
 
-
-            '''训练过程数据记录'''
-            tim1 = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-            metrics['time'].append(tim1)
-            metrics['epoch'].append(int(epoch))
-            metrics['loss'].append(float(loss))
-            metrics['reward'].append(float(reward))
-            json.dump({'metrics': metrics}, fp=open(self.save_path + 'training_process' + '.rs', 'w'), indent=4)
-
-            '''模型保存以及测试'''
+            '''模型保存'''
             if epoch%100 == 0:
                 torch.save(dqn, self.save_path +'dqn_model')
                 torch.save(dqn.eval_net, self.save_path + 'eval_net')
                 torch.save(dqn.target_net, self.save_path + 'target_net')
                 # print('Model saved...')
 
-                #测试一下模型
-                Success_rate,SINR_pu,SINR_su,max_transion_step=self.accuracy(self.test_number)
+                '''测试模型'''
+                Success_rate,SINR_pu,SINR_su,max_transion_step=\
+                    self.accuracy(self.test_number)
+
+
+                '''训练过程数据记录'''
+                tim1 = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+                metrics['epoch'].append(int(epoch))
+                metrics['loss'].append(float(loss))
+                metrics['success_rate'].append(float(Success_rate))
+                json.dump({'metrics': metrics}, fp=open(self.save_path + 'training_process' + '.rs', 'w'), indent=4)
 
                 print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                       '| Epoch:',epoch,'| Loss: %.10f'%loss,
-                      '| Successful_access_rate: ',Success_rate,
+                      '| Access_rate: ',Success_rate,
                       '| Transion_step: ', max_transion_step,
-
-                      # '\nSINR_pu: ',SINR_pu,'| SINR_su: ',SINR_su
                       )
 
         t1 = time.time() - t0
         print('Total training time: ', t1)
 
+        plt.figure()
+        plt.subplot(121)
+        plt.xlabel(r'The number of iteration',fontsize=15)
+        plt.ylabel(r'Loss function',fontsize=15)
+        plt.plot(metrics['epoch'],metrics['loss'],'-r',MarkerSize=10)
+        plt.subplot(122)
+        plt.plot(metrics['epoch'], metrics['success_rate'], '-g', MarkerSize=10)
+        # plt.legend(fontsize=12)
+        plt.xlabel(r'The number of iteration',fontsize=15)
+        plt.ylabel(r'Average successful access rate',fontsize=15)
+        plt.show()
+
 
     def secondary_power(self,search_epoch):
 
         model=torch.load(self.save_path + 'eval_net')
-
-        # print('\nStarting test...')
-        # print('gpu_type=',self.gpu_type,' memory_capacity=',self.memory_capacity,
-        #           ' learning_rate=',self.learning_rate,
-        #           ' epoch=',self.epoch,' CR-routes=',self.CR_router_number,
-        #           ' power_set_number=',self.power_set_number)
 
         '''随机从一个状态出发'''
         PU_power, SU_power = self.cchn.reset_action()
@@ -159,6 +171,7 @@ class Model_train(object):
         s = torch.unsqueeze(torch.FloatTensor(s), 0)
         if self.gpu_type==True:
             s=s.cuda()
+
         # print('\nPU_power_init:', PU_power, ',| SU_power_init', SU_power)
 
         optimal=0
@@ -173,7 +186,7 @@ class Model_train(object):
 
             '''计算reward'''
             s_, r, done,pu_power,su_power,SINR_pu,SINR_su = self.cchn.Model_based_power_control(action)
-            # print('Epoch:',epoch,' action:',action,' reward:',r)#'s:',s,,'\ns_:',s_
+
             # print('\nInput_state:', s)
             # print('Output_actions:', actions_value)
             # print('Choose action: ', action)
@@ -219,7 +232,7 @@ class Model_train(object):
                 # print('Optimal solution: ',',| PU_power_optimal:', pu_power, ',| SU_power_optimal:', su_power)
                 count+=1
             # else:
-            #     print( 'Fail access...')
-        # print('Successful access rate= %0.2f'% (count/times))
+        #         print( 'Fail access...')
+        # print('Successful access rate= %0.2f'% (count/Number_of_tests))
 
         return  (count/Number_of_tests),SINR_pu,SINR_su,np.mean(Average_transion)
