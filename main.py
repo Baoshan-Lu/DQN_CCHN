@@ -22,9 +22,6 @@ if __name__ == '__main__':
                                   int) else env.action_space.sample().shape  # to confirm the shape
     '''DQN_model'''
     parameters = argparse.ArgumentParser()
-    # parameters.add_argument('--states', type=int, default=10)
-    # parameters.add_argument('--actions', type=int, default=8)
-
     parameters.add_argument('--epsion', type=int, default=0.8, help="epsion")
     parameters.add_argument('--ENV_A_SHAPE', type=int, default=ENV_A_SHAPE, help="ENV_A_SHAPE")
     parameters.add_argument('--targetnet_update_rate', type=int, default=100, help="targetnet_update_rate")
@@ -32,23 +29,18 @@ if __name__ == '__main__':
     parameters.add_argument('--batchsize', type=int, default=256)
     parameters.add_argument('--gamma', type=float, default=0.9)
     parameters.add_argument('--epoch', type=int, default=100)
-
     parameters.add_argument('--save_path', type=str, default='results/')
 
     '''CCHN_network'''
     parameters.add_argument('--radius', type=int, default=500)
     parameters.add_argument('--primary_number', type=int, default=1)
     parameters.add_argument('--secondary_number', type=int, default=1)
-
     parameters.add_argument('--CR_router_number', type=int, default=3)
     parameters.add_argument('--power_set_number', type=int, default=10)
-
-
     parameters.add_argument('--user_power_max', type=float, default=0.4)
     parameters.add_argument('--user_power_min', type=float, default=0.05)
     parameters.add_argument('--reward', type=float, default=100)
     parameters.add_argument('--sigma_factor', type=float, default=10)
-
     parameters.add_argument('--noise_power', type=float, default=0.01)
     parameters.add_argument('--mu', type=float, default=0.0)
     parameters.add_argument('--sigma', type=float, default=0.0005)
@@ -74,5 +66,6 @@ if __name__ == '__main__':
 
     Model_train=Model_train(parameters)
     Model_train.model_trainning()
+
     # Model_train.secondary_power()
     # Model_train.accuracy(100)
