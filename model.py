@@ -45,7 +45,7 @@ class DQN(object):
         self.save_path = parameters.save_path
 
         self.epsion = parameters.epsion
-        self.ENV_A_SHAPE = parameters.ENV_A_SHAPE
+        # self.ENV_A_SHAPE = parameters.ENV_A_SHAPE
         self.targetnet_update_rate = parameters.targetnet_update_rate
         self.memory_capacity = parameters.memory_capacity
         self.states = parameters.CR_router_number

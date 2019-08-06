@@ -1,28 +1,20 @@
 import os
 import torch
 import numpy as np
-import gym
 from  model  import DQN
 import argparse
 import time
-
 from train_model import  Model_train
 import network_model
 
-env = gym.make('CartPole-v0')
-env = env.unwrapped
-
-
 if __name__ == '__main__':
 
-
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-    ENV_A_SHAPE = 0 if isinstance(env.action_space.sample(),
-                                  int) else env.action_space.sample().shape  # to confirm the shape
+
     '''DQN_model'''
     parameters = argparse.ArgumentParser()
     parameters.add_argument('--epsion', type=int, default=0.6, help="epsion")
-    parameters.add_argument('--ENV_A_SHAPE', type=int, default=ENV_A_SHAPE, help="ENV_A_SHAPE")
+    # parameters.add_argument('--ENV_A_SHAPE', type=int, default=ENV_A_SHAPE, help="ENV_A_SHAPE")
     parameters.add_argument('--targetnet_update_rate', type=int, default=100, help="targetnet_update_rate")
     parameters.add_argument('--memory_capacity', type=int, default=400, help="memory_capacity")
     parameters.add_argument('--batchsize', type=int, default=256)
