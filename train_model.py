@@ -115,11 +115,11 @@ class Model_train(object):
 
 
         #模型保存
-        if self.pretrain == False:  # 保存预训练模型
-            torch.save(dqn, self.save_path +'dqn_model')
-            torch.save(dqn.eval_net, self.save_path + 'eval_net')
-            torch.save(dqn.target_net, self.save_path + 'target_net')
-            print('Model saved...')
+        # if self.pretrain == False:  # 保存预训练模型
+        torch.save(dqn, self.save_path +'dqn_model')
+        torch.save(dqn.eval_net, self.save_path + 'eval_net')
+        torch.save(dqn.target_net, self.save_path + 'target_net')
+        print('Model saved...')
 
         t1 = time.time() - t0
         print('Total training time: ', t1)
