@@ -24,6 +24,9 @@ class Model_train(object):
        self.cchn=Network(parameters)
        self.parameters=parameters
        self.pretrain=parameters.pretrain
+       self.batchsize = parameters.batchsize
+
+
 
        self.save_path=parameters.save_path
        self.learning_rate = parameters.learning_rate
@@ -49,12 +52,13 @@ class Model_train(object):
         if self.pretrain==True:
             dqn=torch.load(self.save_path +'dqn_model')
 
-        print('\nStarting training...')
-        print('pretrain=',self.pretrain,'gpu_type=',self.gpu_type,' memory_capacity=',self.memory_capacity,
-                  ' learning_rate=',self.learning_rate,
-                  ' epoch=',self.epoch,' CR-routes=',self.CR_router_number,
-                  ' power_set_number=',self.power_set_number)
 
+        print('CR-routers=',self.CR_router_number,'|  Power_actions=',self.power_set_number)
+        print('Use pretrained model=',self.pretrain,'| Use CUDA=',self.gpu_type)
+        print('Memory_capacity=',self.memory_capacity,'| Minimum batch size=',self.batchsize)
+        print('Total epoches=',self.epoch,'|  Learning_rate=',self.learning_rate)
+
+        print('\nStarting training...')
 
         t0 = time.time()
         metrics = {'time': [], 'epoch': [], 'loss': [], 'reward': []}
@@ -72,35 +76,20 @@ class Model_train(object):
 
 
             # s = env.reset()
-            Reward = 0
+            reward = 0
+            loss=100
             while True:
-                # env.render()
 
                 '''将初始状态输入eval_net，结合利用e_greedy得到下一个动作'''
                 a = dqn.choose_action(s,epoch/self.epoch)
 
-                # take action 采用一个动作
                 '''采取此动作，计算回报，得到下一个状态'''
-                # s_, r, done, info = env.step(SU_action)
                 s_, r, done=self.cchn.envirement(a)
-                # print('s_: ', s_, '| done: %.2f' % done)
-
-                # '''获得回报'''
-                # x, x_dot, theta, theta_dot = s_
-                # r1 = (env.x_threshold - abs(x)) / env.x_threshold - 0.8
-                # r2 = (env.theta_threshold_radians - abs(theta)) / env.theta_threshold_radians - 0.5
-                # r = r1 + r2
-                #
-                # print('s:', type(s))
-                # print('a:', type(a))
-                # print('r:', type(r))
-                # print('s_:', type(s_))
 
                 '''收集经验'''
                 dqn.store_transition(s, a, r, s_)
 
-
-                Reward += r
+                reward += r
 
                 # if count%100==0:
                 #     print('r=',r)
@@ -110,7 +99,8 @@ class Model_train(object):
                     loss=dqn.learn()
                     if done: #表示达到最佳状态
                         if epoch%100==0:
-                            print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),'Epoch: ', epoch,'| Reward: %.2f'%Reward,'| Loss: %.8f'%loss)
+                            print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),'Epoch: ', epoch,
+                                  '| Reward: %.2f'%reward,'| Loss: %.10f'%loss)
 
                 '''不管经验库收不收集完成，如果已经完成任务，那就跳出，直接进入下一个状态'''
                 if done:
@@ -120,27 +110,26 @@ class Model_train(object):
 
                 s = s_
 
-            # print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'Epoch: ', epoch, '| Reward: %.2f' % Reward,
-            #       '| Loss: %.2f' % loss)
-            # print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'), 'Epoch: ', epoch, '| Reward: %.2f' % Reward)
-            # '| Loss: %.2f' % loss)
+                        # 数据保存
+            tim1 = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            metrics['time'].append(tim1)
+            metrics['epoch'].append(int(epoch))
+            metrics['loss'].append(float(loss))
+            metrics['reward'].append(float(reward))
+            json.dump({'metrics': metrics}, fp=open(self.save_path + 'training_process' + '.rs', 'w'), indent=4)
+
 
         #模型保存
-        torch.save(dqn, self.save_path +'dqn_model')
-        torch.save(dqn.eval_net, self.save_path + 'eval_net')
-
-
-        # 数据保存
-        tim1 = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-        # metrics['time'].append(tim1)
-        # metrics['epoch'].append(int(epoch))
-        # metrics['loss'].append(float(loss))
-        # metrics['reward'].append(float(ep_r))
-        # json.dump({'metrics': metrics}, fp=open(parameters.save_path +'training_process'  + '.rs', 'w'), indent=4)
+        if self.pretrain == False:  # 保存预训练模型
+            torch.save(dqn, self.save_path +'dqn_model')
+            torch.save(dqn.eval_net, self.save_path + 'eval_net')
+            torch.save(dqn.target_net, self.save_path + 'target_net')
+            print('Model saved...')
 
         t1 = time.time() - t0
         print('Total training time: ', t1)
+
 
     def secondary_power(self):
 

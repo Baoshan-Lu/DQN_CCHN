@@ -42,6 +42,7 @@ class Net(nn.Module):
 class DQN(object):
     def __init__(self,parameters):
         self.gpu_type = parameters.gpu_type
+        self.save_path = parameters.save_path
 
         self.epsion = parameters.epsion
         self.ENV_A_SHAPE = parameters.ENV_A_SHAPE
@@ -50,6 +51,7 @@ class DQN(object):
         self.states = parameters.CR_router_number
         self.action = parameters.power_set_number
 
+        self.pretrain = parameters.pretrain
         self.learning_rate = parameters.learning_rate
         self.batchsize = parameters.batchsize
         self.gamma = parameters.gamma
@@ -60,12 +62,16 @@ class DQN(object):
 
         self.count = 0
 
+        ''''建立Q网络'''
         self.eval_net, self.target_net = Net(parameters), Net(parameters)
-
+        if self.pretrain==True: #使用预训练模型
+            self.eval_net, self.target_net = torch.load(self.save_path + 'eval_net'), \
+                                             torch.load(self.save_path + 'eval_net')
+        ''''GPU训练'''
         if self.gpu_type == True:
             self.eval_net, self.target_net=self.eval_net.cuda(), self.target_net.cuda()
 
-
+        ''''优化器选择'''
         self.optimizer = torch.optim.Adam(self.eval_net.parameters(), lr=self.learning_rate) #优化器选择
         self.loss_func = nn.MSELoss()
 

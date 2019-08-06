@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
     parameters.add_argument('--primary_init_power', type=float, default=0.1)
 
-    parameters = parameters.parse_args(['--epoch','20000'])
+    parameters = parameters.parse_args(['--epoch','100'])
 
     # cchn=network_model.Network(parameters)
     # cchn.create_network()
