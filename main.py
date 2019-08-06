@@ -14,7 +14,6 @@ if __name__ == '__main__':
     '''DQN_model'''
     parameters = argparse.ArgumentParser()
     parameters.add_argument('--epsion', type=int, default=0.6, help="epsion")
-    # parameters.add_argument('--ENV_A_SHAPE', type=int, default=ENV_A_SHAPE, help="ENV_A_SHAPE")
     parameters.add_argument('--targetnet_update_rate', type=int, default=100, help="targetnet_update_rate")
     parameters.add_argument('--memory_capacity', type=int, default=400, help="memory_capacity")
     parameters.add_argument('--batchsize', type=int, default=256)

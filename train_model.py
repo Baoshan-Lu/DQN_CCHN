@@ -1,7 +1,6 @@
 import os
 import torch
 import numpy as np
-import gym
 from  model  import DQN
 import argparse
 import time
@@ -130,11 +129,13 @@ class Model_train(object):
                 # print('Model saved...')
 
                 #测试一下模型
-                Success_rate,SINR_pu,SINR_su=self.accuracy(self.test_number)
+                Success_rate,SINR_pu,SINR_su,max_transion_step=self.accuracy(self.test_number)
 
                 print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                       '| Epoch:',epoch,'| Loss: %.10f'%loss,
                       '| Successful_access_rate: ',Success_rate,
+                      '| Transion_step: ', max_transion_step,
+
                       # '\nSINR_pu: ',SINR_pu,'| SINR_su: ',SINR_su
                       )
 
@@ -161,7 +162,7 @@ class Model_train(object):
         # print('\nPU_power_init:', PU_power, ',| SU_power_init', SU_power)
 
         optimal=0
-        # epoch_max=search_epoch
+        max_transion_step=search_epoch
         pu_power1, su_power1=PU_power, SU_power
 
         for epoch in range(search_epoch):
@@ -185,6 +186,7 @@ class Model_train(object):
                 # print('PU_power_optimal:', pu_power, 'SU_power_optimal:', su_power)
                 optimal=1
                 pu_power1, su_power1 =pu_power,su_power
+                max_transion_step=epoch+1
                 break
 
             s=s_
@@ -194,14 +196,23 @@ class Model_train(object):
 
         # print('SINR_pu:', SINR_pu, ',| SU_power_init', SINR_su)
 
-        return  optimal,pu_power1,su_power1,SINR_pu,SINR_su
+        return  optimal,pu_power1,su_power1,SINR_pu,SINR_su,max_transion_step
 
 
-    def accuracy(self,times):
+    def accuracy(self,Number_of_tests):
         count=0
-        for search_epoch in range(times):
+
+        '''最大的状态转移次数'''
+        transition_steps=20
+
+        Average_transion=[]
+
+        for search_epoch in range(Number_of_tests):
             # print('\nTest:',search_epoch)
-            optimal,pu_power,su_power,SINR_pu,SINR_su=self.secondary_power(20)
+            optimal,pu_power,su_power,SINR_pu,SINR_su,max_transion_step=\
+                self.secondary_power(transition_steps)
+
+            Average_transion.append(max_transion_step)
 
             if optimal==1:
                 # print('Succeed access...')
@@ -209,7 +220,6 @@ class Model_train(object):
                 count+=1
             # else:
             #     print( 'Fail access...')
-
         # print('Successful access rate= %0.2f'% (count/times))
 
-        return  (count/times),SINR_pu,SINR_su
+        return  (count/Number_of_tests),SINR_pu,SINR_su,np.mean(Average_transion)
