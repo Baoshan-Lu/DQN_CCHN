@@ -9,6 +9,8 @@ class Network(object):
         self.primary_number = parameters.primary_number
         self.secondary_number = parameters.secondary_number
         self.CR_router_number = parameters.CR_router_number
+        self.reward=parameters.reward
+        self.sigma_factor=parameters.sigma_factor
 
         self.user_power_max=parameters.user_power_max
         self.user_power_min=parameters.user_power_min
@@ -158,31 +160,15 @@ class Network(object):
 
         pu_power = self.primary_init_power
 
-        '''根据动作选择 SU 功率'''
+        '''根据动作选择得到 SU 功率'''
         su_power = self.power_set[action_choose]
 
         '''根据动作得到状态'''
-        new_states=self.CR_router_sensed_power(self.primary_init_power,su_power)
-
-        '''SU 信干噪比检测'''
-        SINR_pu = pu_power / (su_power + self.noise_power)
-        SINR_su = su_power /(pu_power+ self.noise_power)
-
-        # print('action_choose:', action_choose)
-        # print('pu_power:', type(self.primary_init_power))
-        # print('su_power:', type(su_power))
-
-        if SINR_pu>=self.primary_rate_min and SINR_su>=self.secodary_rate_min:
-            done=True  #到达最好的状态
-            reward=10
-
-        # print('pu_power:', self.primary_init_power)
-        # print('su_power:', su_power)
-        # print('SINR_pu:', SINR_pu)
-        # print('SINR_su:', SINR_su)
+        new_states=self.CR_router_sensed_power(self.primary_init_power,su_power,self.sigma_factor)
 
         '''计算下一次的 PU 功率'''
-        pu_new_power=(pu_power*self.primary_rate_min)/SINR_pu
+        SINR_pu_old = pu_power / (su_power + self.noise_power)
+        pu_new_power=(pu_power*self.primary_rate_min)/SINR_pu_old
         #超过最大功率
         if pu_new_power<self.user_power_max:
             selected=int((pu_new_power/self.user_power_max)*self.power_set_number)
@@ -194,43 +180,33 @@ class Network(object):
 
         '''PU 功率更新'''
         self.primary_init_power=pu_new_power
-        # print('primary_init_power:',self.primary_init_power,'su_power:',su_power)
 
+        '''PU回应之后，信干噪比检测，计算回报率'''
+        SINR_pu = pu_new_power / (su_power + self.noise_power)
+        SINR_su = su_power /(pu_new_power+ self.noise_power)
+        if SINR_pu>=self.primary_rate_min and SINR_su>=self.secodary_rate_min:
+            done=True  #到达最好的状态
+            reward=self.reward
 
         return new_states,reward,done#,SINR_pu,SINR_su
 
     def Model_based_power_control(self,action_choose):
 
+        # Gain=self.channelgain(pu_i,su_j)
         done=False
         reward=0
 
         pu_power = self.primary_init_power
 
-        '''根据动作选择 SU 功率'''
+        '''根据动作选择得到 SU 功率'''
         su_power = self.power_set[action_choose]
 
         '''根据动作得到状态'''
-        new_states=self.CR_router_sensed_power(self.primary_init_power,su_power)
-
-        '''SU 信干噪比检测'''
-        SINR_pu = pu_power / (su_power + self.noise_power)
-        SINR_su = su_power /(pu_power+ self.noise_power)
-
-        # print('action_choose:', action_choose)
-        # print('pu_power:', type(self.primary_init_power))
-        # print('su_power:', type(su_power))
-
-        if SINR_pu>=self.primary_rate_min and SINR_su>=self.secodary_rate_min:
-            done=True  #到达最好的状态
-            reward=10
-
-        # print('pu_power:', self.primary_init_power)
-        # print('su_power:', su_power)
-        # print('SINR_pu:', SINR_pu)
-        # print('SINR_su:', SINR_su)
+        new_states=self.CR_router_sensed_power(self.primary_init_power,su_power,self.sigma_factor)
 
         '''计算下一次的 PU 功率'''
-        pu_new_power=(pu_power*self.primary_rate_min)/SINR_pu
+        SINR_pu_old = pu_power / (su_power + self.noise_power)
+        pu_new_power=(pu_power*self.primary_rate_min)/SINR_pu_old
         #超过最大功率
         if pu_new_power<self.user_power_max:
             selected=int((pu_new_power/self.user_power_max)*self.power_set_number)
@@ -242,14 +218,19 @@ class Network(object):
 
         '''PU 功率更新'''
         self.primary_init_power=pu_new_power
-        # print('primary_init_power:',self.primary_init_power,'su_power:',su_power)
+
+        '''PU回应之后，信干噪比检测，计算回报率'''
+        SINR_pu = pu_new_power / (su_power + self.noise_power)
+        SINR_su = su_power /(pu_new_power+ self.noise_power)
+        if SINR_pu>=self.primary_rate_min and SINR_su>=self.secodary_rate_min:
+            done=True  #到达最好的状态
+            reward=self.reward
 
 
+        return new_states,reward,done,pu_new_power,su_power
 
-        return new_states,reward,done,pu_power,su_power
 
-
-    def CR_router_sensed_power(self,pu_power,su_power):
+    def CR_router_sensed_power(self,pu_power,su_power,sigma_factor):
 
         primary_coord = self.network[0]
         secondary_coord = self.network[1]
@@ -273,7 +254,7 @@ class Network(object):
             power_su.append(su_power*channel_gain2[1])
 
             ''''汇总功率状态值'''
-            sigma=(pu_power*channel_gain1[1]+su_power*channel_gain2[1])/10
+            sigma=(pu_power*channel_gain1[1]+su_power*channel_gain2[1])/sigma_factor
             power_state.append(pu_power*channel_gain1[1] +su_power*channel_gain2[1]+sigma)
 
 

@@ -25,7 +25,7 @@ class Model_train(object):
        self.parameters=parameters
        self.pretrain=parameters.pretrain
        self.batchsize = parameters.batchsize
-
+       self.sigma_factor = parameters.sigma_factor
 
 
        self.save_path=parameters.save_path
@@ -64,26 +64,19 @@ class Model_train(object):
         metrics = {'time': [], 'epoch': [], 'loss': [], 'reward': []}
 
         count=0
-
+        loss = 100
         for epoch in range(self.epoch):
 
             '''初始化，PU,SU随机选择一个动作，计算CR_router感知的功率，作为初始状态值'''
             PU_power,SU_power=self.cchn.reset_action()
             # print('PU_power:',PU_power,'SU_power:',SU_power)
-            s=self.cchn.CR_router_sensed_power(PU_power,SU_power)
-
-            # print('s:',s)
-
-
-            # s = env.reset()
+            s=self.cchn.CR_router_sensed_power(PU_power,SU_power,self.sigma_factor)
             reward = 0
-            loss=100
             while True:
-
                 '''将初始状态输入eval_net，结合利用e_greedy得到下一个动作'''
                 a = dqn.choose_action(s,epoch/self.epoch)
 
-                '''采取此动作，计算回报，得到下一个状态'''
+                '''采取此动作,Pu调整自己的功率，计算回报，得到下一个状态'''
                 s_, r, done=self.cchn.envirement(a)
 
                 '''收集经验'''
@@ -91,11 +84,12 @@ class Model_train(object):
 
                 reward += r
 
-                # if count%100==0:
+                # if count%500==0:
                 #     print('r=',r)
 
                 '''经验收集完毕，从经验库中抽取minbatch 来训练'''
                 if dqn.memory_counter > self.memory_capacity:  #收集经验之后，开始学习
+
                     loss=dqn.learn()
                     if done: #表示达到最佳状态
                         if epoch%100==0:
@@ -131,7 +125,7 @@ class Model_train(object):
         print('Total training time: ', t1)
 
 
-    def secondary_power(self):
+    def secondary_power(self,search_epoch):
 
         model=torch.load(self.save_path + 'eval_net')
 
@@ -144,14 +138,17 @@ class Model_train(object):
 
         '''随机从一个状态出发'''
         PU_power, SU_power = self.cchn.reset_action()
-        s = self.cchn.CR_router_sensed_power(PU_power, SU_power)
+        s = self.cchn.CR_router_sensed_power(PU_power, SU_power,self.sigma_factor)
         s = torch.unsqueeze(torch.FloatTensor(s), 0)
         if self.gpu_type==True:
             s=s.cuda()
         print('PU_power_init:', PU_power, 'SU_power_init', SU_power)
 
-        for epoch in range(2900):
+        optimal=0
+        epoch_max=search_epoch
+        pu_power1, su_power1=PU_power, SU_power
 
+        for epoch in range(search_epoch):
 
             '''找到Q值最大的动作'''
             actions_value = model.forward(s)
@@ -159,14 +156,26 @@ class Model_train(object):
 
             '''计算reward'''
             s_, r, done,pu_power,su_power = self.cchn.Model_based_power_control(action)
-
-
             print('Epoch:',epoch,' action:',action,' reward:',r)#'s:',s,,'\ns_:',s_
 
             '''达到最佳的状态，跳出'''
             if done:
-                print('PU_power_optimal:', pu_power, 'SU_power_optimal:', su_power)
+                # print('PU_power_optimal:', pu_power, 'SU_power_optimal:', su_power)
+                optimal=1
+                epoch_max=epoch
+                pu_power1, su_power1 =pu_power,su_power
                 break
+
+        return  optimal,epoch_max,pu_power1,su_power1
+
+
+    def accuracy(self,times):
+
+        for search_epoch in range(times):
+            optimal, epoch_max,pu_power,su_power=self.secondary_power(search_epoch)
+            print('Optimal=', optimal, '|  Epoch_max=', epoch_max)
+            print('PU_power_optimal:', pu_power, 'SU_power_optimal:', su_power)
+
 
 
 
