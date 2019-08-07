@@ -67,7 +67,7 @@ class Model_train(object):
         print('\nStarting training...')
 
         t0 = time.time()
-        metrics = {'epoch': [], 'loss': [], 'success_rate': []}
+        metrics = {'epoch': [], 'loss': [], 'success_rate': [],'max_transion_step': []}
 
         count=0
         loss = 100
@@ -138,6 +138,7 @@ class Model_train(object):
                 metrics['epoch'].append(int(epoch))
                 metrics['loss'].append(float(loss))
                 metrics['success_rate'].append(float(Success_rate))
+                metrics['max_transion_step'].append(float(max_transion_step))
                 json.dump({'metrics': metrics}, fp=open(self.save_path + 'training_process' + '.rs', 'w'), indent=4)
 
                 print(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -149,22 +150,42 @@ class Model_train(object):
         t1 = time.time() - t0
         print('Total training time: ', t1)
 
+        # metrics=json.loads(jsonData)
         plt.figure()
-        plt.subplot(121)
-        plt.xlabel(r'The number of iteration',fontsize=15)
-        plt.ylabel(r'Loss function',fontsize=15)
-        plt.plot(metrics['epoch'],metrics['loss'],'-r',MarkerSize=10)
-        plt.subplot(122)
+        # plt.subplot(311)figsize=(8, 6)
+        plt.xlabel(r'The number of iteration', fontsize=15)
+        plt.ylabel(r'Loss function', fontsize=15)
+        plt.plot(metrics['epoch'], metrics['loss'], '-r', MarkerSize=10)
+        plt.savefig(self.save_path + 'Fig Loss_funtion CR_router-' + str(self.CR_router_number) + 'Power_mode-' + str(
+            self.power_set_number) +
+                    'sigma_factor-' + str(self.sigma_factor)
+                    + datetime.now().strftime('%Y-%m-%d') + '.png', dpi=400, bbox_inches='tight')
+
+        plt.figure()
+        # plt.subplot(312)figsize=(8, 6)
         plt.plot(metrics['epoch'], metrics['success_rate'], '-g', MarkerSize=10)
         # plt.legend(fontsize=12)
-        plt.xlabel(r'The number of iteration',fontsize=15)
-        plt.ylabel(r'Average successful access rate',fontsize=15)
+        plt.xlabel(r'The number of iteration', fontsize=15)
+        plt.ylabel(r'Average successful access rate', fontsize=15)
+        plt.savefig(self.save_path + 'Fig access rate CR_router-' + str(self.CR_router_number) + 'Power_mode-' + str(
+            self.power_set_number) +
+                    'sigma_factor-' + str(self.sigma_factor)
+                    + datetime.now().strftime('%Y-%m-%d') + '.png', dpi=400, bbox_inches='tight')
 
-        plt.savefig(self.save_path +'Fig CR_router-'+str(self.CR_router_number)+'Power_mode-'+str(self.power_set_number)+
-                    'sigma_factor-'+str(self.sigma_factor)
-                    +datetime.now().strftime('%Y-%m-%d')+'.png', dpi=400, bbox_inches='tight')
+        plt.figure()
+        # plt.subplot(313)figsize=(8, 6)
+        plt.plot(metrics['epoch'], metrics['max_transion_step'], '-b', MarkerSize=10)
+        # plt.legend(fontsize=12)
+        plt.xlabel(r'The number of iteration', fontsize=15)
+        plt.ylabel(r'Average transion steps', fontsize=15)
+
+        plt.savefig(self.save_path + 'Fig Average transion steps CR_router-' + str(self.CR_router_number) + 'Power_mode-' + str(
+            self.power_set_number) +
+                    'sigma_factor-' + str(self.sigma_factor)
+                    + datetime.now().strftime('%Y-%m-%d') + '.png', dpi=400, bbox_inches='tight')
 
         plt.show()
+
 
 
     def secondary_power(self,search_epoch):

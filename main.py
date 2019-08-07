@@ -49,13 +49,13 @@ if __name__ == '__main__':
 
     '''初始参数'''
     parameters = parameters.parse_args(
-        ['--CR_router_number','3', '--power_set_number',
+        ['--CR_router_number','10', '--power_set_number',
          '8','--reward', '10','--batchsize','256',
          '--memory_capacity','400','--start_train', '300',
-         '--sigma_factor','10','--test_number', '50',
+         '--sigma_factor','3','--test_number', '50',
          '--primary_rate_min', '1.2', '--secodary_rate_min', '0.7',
          '--noise_power', '0.01', '--transition_steps', '20',
-          '--epoch','5000','--learning_rate','0.001'])
+          '--epoch','300','--learning_rate','0.001'])
 
 
     '''随机种子'''
