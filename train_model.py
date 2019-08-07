@@ -162,7 +162,7 @@ class Model_train(object):
 
         plt.savefig(self.save_path +'Fig CR_router-'+str(self.CR_router_number)+'Power_mode-'+str(self.power_set_number)+
                     'sigma_factor-'+str(self.sigma_factor)
-                    +datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.png', dpi=400, bbox_inches='tight')
+                    +datetime.now().strftime('%Y-%m-%d')+'.png', dpi=400, bbox_inches='tight')
 
         plt.show()
 
