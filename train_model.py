@@ -27,6 +27,7 @@ class Model_train(object):
        self.sigma_factor = parameters.sigma_factor
        self.test_number = parameters.test_number
        self.start_train=parameters.start_train
+       self.transition_steps=parameters.transition_steps
 
        self.primary_rate_min = parameters.primary_rate_min
        self.secodary_rate_min = parameters.secodary_rate_min
@@ -48,7 +49,7 @@ class Model_train(object):
        print('Memory_capacity=', self.memory_capacity, '| Minimum batch size=', self.batchsize)
        print('Total epoches=', self.epoch, '|  Learning_rate=', self.learning_rate)
        print('Pu_SINR_min=', self.primary_rate_min, '|  Su_SINR_min=', self.secodary_rate_min)
-
+       print('Max_transition_steps=', self.transition_steps)
 
     def model_trainning(self):
         # cchn = Network(parameters)
@@ -158,6 +159,11 @@ class Model_train(object):
         # plt.legend(fontsize=12)
         plt.xlabel(r'The number of iteration',fontsize=15)
         plt.ylabel(r'Average successful access rate',fontsize=15)
+
+        plt.savefig(self.save_path +'Fig CR_router-'+str(self.CR_router_number)+'Power_mode-'+str(self.power_set_number)+
+                    'sigma_factor-'+str(self.sigma_factor)
+                    +datetime.now().strftime('%Y-%m-%d %H:%M:%S')+'.png', dpi=400, bbox_inches='tight')
+
         plt.show()
 
 
@@ -216,14 +222,14 @@ class Model_train(object):
         count=0
 
         '''最大的状态转移次数'''
-        transition_steps=20
+        # transition_steps=20
 
         Average_transion=[]
 
         for search_epoch in range(Number_of_tests):
             # print('\nTest:',search_epoch)
             optimal,pu_power,su_power,SINR_pu,SINR_su,max_transion_step=\
-                self.secondary_power(transition_steps)
+                self.secondary_power(self.transition_steps)
 
             Average_transion.append(max_transion_step)
 
